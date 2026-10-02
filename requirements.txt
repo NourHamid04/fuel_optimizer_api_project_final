@@ -1,0 +1,7 @@
+Django>=5.1
+django-ninja
+pandas
+numpy
+scikit-learn
+requests
+python-dotenv

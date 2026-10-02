@@ -1,0 +1,139 @@
+# ============================================================
+# Python
+# ============================================================
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+
+# ============================================================
+# Virtual Environment
+# ============================================================
+
+venv/
+env/
+ENV/
+.venv/
+
+
+# ============================================================
+# Django
+# ============================================================
+
+*.log
+local_settings.py
+
+db.sqlite3
+db.sqlite3-journal
+
+media/
+staticfiles/
+
+
+# ============================================================
+# Environment Variables / Secrets
+# ============================================================
+
+.env
+.env.*
+!.env.example
+
+
+# ============================================================
+# IDE / Editor
+# ============================================================
+
+.vscode/
+.idea/
+
+*.swp
+*.swo
+
+.DS_Store
+Thumbs.db
+
+
+# ============================================================
+# Testing / Coverage
+# ============================================================
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+.tox/
+.nox/
+
+
+# ============================================================
+# Type Checking / Linting
+# ============================================================
+
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+.ruff_cache/
+
+
+# ============================================================
+# Jupyter
+# ============================================================
+
+.ipynb_checkpoints/
+
+
+# ============================================================
+# Generated Fuel Processing Files
+# ============================================================
+
+# Temporary files created by the geocoding preprocessing script
+fuel_optimizer_api/data/addresses.csv
+fuel_optimizer_api/data/census_input.csv
+fuel_optimizer_api/data/census-batch-input.csv
+fuel_optimizer_api/data/census-geocoder-result.csv
+
+
+# ============================================================
+# Optional: generated processed fuel dataset
+# ============================================================
+
+# KEEP THIS COMMENTED if you want to commit the processed dataset
+# so reviewers can run the API immediately.
+#
+# fuel_optimizer_api/data/fuel-prices-processed.csv
+
+
+# ============================================================
+# OS / Temporary Files
+# ============================================================
+
+*.tmp
+*.temp
+*.bak
+
+~$*
