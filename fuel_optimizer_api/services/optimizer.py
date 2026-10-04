@@ -141,6 +141,7 @@ class FuelOptimizerService:
             route["distance"]
         )
 
+
         coordinates = (
             route["geometry"]
             ["coordinates"]
@@ -204,11 +205,8 @@ class FuelOptimizerService:
 
 
         cumulative_distances = [
-
             distance * scale_factor
-
-            for distance
-            in cumulative_distances
+            for distance in cumulative_distances
         ]
 
 
@@ -249,13 +247,10 @@ class FuelOptimizerService:
 
         # ----------------------------------------------------
         # Remove private optimization metadata
-        #
-        # _route_mile and _estimated_leg_distance
-        # are useful internally but should not be returned
-        # from the public API.
         # ----------------------------------------------------
 
         public_stops = []
+
 
         for stop in selected_stops:
 
@@ -354,10 +349,6 @@ class FuelOptimizerService:
             )
 
 
-            # ------------------------------------------------
-            # No physically reachable station exists
-            # ------------------------------------------------
-
             if station is None:
 
                 raise ValueError(
@@ -368,10 +359,6 @@ class FuelOptimizerService:
                     f"{round(current_mile + self.max_range, 1)}."
                 )
 
-
-            # ------------------------------------------------
-            # Prevent infinite loops
-            # ------------------------------------------------
 
             if (
                 station["_route_mile"]
@@ -389,9 +376,6 @@ class FuelOptimizerService:
                 station
             )
 
-
-            # The next search begins from this station's
-            # approximate position along the route.
 
             current_mile = (
                 station["_route_mile"]
@@ -424,11 +408,6 @@ class FuelOptimizerService:
         5. Reject stations that would exceed the vehicle range.
         """
 
-        # ----------------------------------------------------
-        # Maximum route mileage we want to reach
-        # before refueling.
-        # ----------------------------------------------------
-
         reachable_end = min(
             current_mile
             + MAX_REFUEL_TARGET_MILES,
@@ -436,16 +415,6 @@ class FuelOptimizerService:
             total_distance,
         )
 
-
-        # ----------------------------------------------------
-        # Search windows
-        #
-        # Window 1:
-        # Prefer making at least 150 miles of progress.
-        #
-        # Window 2:
-        # Emergency fallback allows earlier stations.
-        # ----------------------------------------------------
 
         search_windows = [
 
@@ -465,10 +434,6 @@ class FuelOptimizerService:
         ]
 
 
-        # ====================================================
-        # Search each window
-        # ====================================================
-
         for (
             window_start,
             window_end,
@@ -482,10 +447,6 @@ class FuelOptimizerService:
                 continue
 
 
-            # ================================================
-            # Progressive detour search
-            # ================================================
-
             for detour_radius in DETOUR_SEARCH_LEVELS:
 
                 candidates = {}
@@ -495,36 +456,16 @@ class FuelOptimizerService:
                 )
 
 
-                # ============================================
-                # Scan route corridor
-                # ============================================
-
                 while (
                     checkpoint
                     <= window_end
                 ):
-
-                    # ----------------------------------------
-                    # Distance travelled along the route
-                    # since previous fuel stop.
-                    # ----------------------------------------
 
                     route_progress = (
                         checkpoint
                         - current_mile
                     )
 
-
-                    # ----------------------------------------
-                    # Maximum physically possible one-way
-                    # detour while staying inside the
-                    # 500-mile range.
-                    #
-                    # route_progress
-                    # + detour there
-                    # + detour back
-                    # <= 500
-                    # ----------------------------------------
 
                     maximum_feasible_detour = (
 
@@ -546,11 +487,6 @@ class FuelOptimizerService:
                         continue
 
 
-                    # ----------------------------------------
-                    # Never search farther than physically
-                    # reachable.
-                    # ----------------------------------------
-
                     search_radius = min(
                         detour_radius,
                         maximum_feasible_detour,
@@ -566,10 +502,6 @@ class FuelOptimizerService:
                         continue
 
 
-                    # ----------------------------------------
-                    # Find route coordinate for checkpoint
-                    # ----------------------------------------
-
                     longitude, latitude = (
                         self._coordinate_at_distance(
 
@@ -584,10 +516,6 @@ class FuelOptimizerService:
                         )
                     )
 
-
-                    # ----------------------------------------
-                    # Spatial search using BallTree
-                    # ----------------------------------------
 
                     stations = (
                         fuel_station_service
@@ -605,10 +533,6 @@ class FuelOptimizerService:
                     )
 
 
-                    # ========================================
-                    # Process candidate stations
-                    # ========================================
-
                     for station in stations:
 
                         station_detour = (
@@ -617,13 +541,6 @@ class FuelOptimizerService:
                             ]
                         )
 
-
-                        # ------------------------------------
-                        # Approximate detour:
-                        #
-                        # Leave route → station
-                        # Station → route
-                        # ------------------------------------
 
                         estimated_detour = (
                             station_detour
@@ -641,12 +558,6 @@ class FuelOptimizerService:
                         )
 
 
-                        # ------------------------------------
-                        # Vehicle must be physically capable
-                        # of reaching station and returning
-                        # to the route.
-                        # ------------------------------------
-
                         if (
                             estimated_leg_distance
                             > self.max_range
@@ -654,10 +565,6 @@ class FuelOptimizerService:
 
                             continue
 
-
-                        # ------------------------------------
-                        # Unique station key
-                        # ------------------------------------
 
                         station_key = (
 
@@ -698,14 +605,6 @@ class FuelOptimizerService:
                         )
 
 
-                        # ------------------------------------
-                        # Same station may be discovered
-                        # from multiple checkpoints.
-                        #
-                        # Keep the representation with
-                        # the smallest route distance.
-                        # ------------------------------------
-
                         if (
                             existing is None
 
@@ -732,10 +631,6 @@ class FuelOptimizerService:
                     )
 
 
-                # ============================================
-                # Choose best candidate at this radius
-                # ============================================
-
                 if candidates:
 
                     return (
@@ -750,10 +645,6 @@ class FuelOptimizerService:
                         )
                     )
 
-
-        # ----------------------------------------------------
-        # No valid station exists in the reachable corridor.
-        # ----------------------------------------------------
 
         return None
 
@@ -782,27 +673,10 @@ class FuelOptimizerService:
             station: Dict,
         ) -> float:
 
-            # --------------------------------------------
-            # Primary factor:
-            # fuel price
-            # --------------------------------------------
-
             price_score = (
                 station["price"]
             )
 
-
-            # --------------------------------------------
-            # Penalize detours.
-            #
-            # Example:
-            #
-            # 10 miles →
-            # +0.08 score
-            #
-            # 50 miles →
-            # +0.40 score
-            # --------------------------------------------
 
             detour_penalty = (
 
@@ -813,10 +687,6 @@ class FuelOptimizerService:
                 * 0.008
             )
 
-
-            # --------------------------------------------
-            # Prefer making more progress along route.
-            # --------------------------------------------
 
             miles_before_target = max(
 
@@ -1053,63 +923,81 @@ class FuelOptimizerService:
     # Fuel Cost Calculation
     # ========================================================
 
-    @staticmethod
     def _calculate_estimated_cost(
+        self,
         total_gallons: float,
         fuel_stops: List[Dict],
     ) -> float:
         """
-        Estimate total money spent on fuel.
+        Estimate total fuel cost for the complete journey.
 
         Formula:
 
-            trip fuel =
-                total miles / MPG
+            fuel required =
+                route distance / MPG
 
-            estimated cost =
-                total gallons ×
-                weighted average selected fuel price
+            total cost =
+                total gallons × estimated fuel price
 
-        Because the assessment does not provide:
-        - starting tank level
-        - starting fuel price
+        Pricing strategy:
 
-        we estimate the trip cost from selected fuel prices.
+        1. If optimized fuel stops exist:
+           use the average fuel price of those selected stops.
+
+        2. If no fuel stop is required:
+           use the average price from the supplied fuel-price
+           dataset.
+
+        This prevents short trips from incorrectly returning
+        a total fuel cost of $0.
         """
 
         if total_gallons <= 0:
             return 0.0
 
 
-        if not fuel_stops:
-            return 0.0
+        # ----------------------------------------------------
+        # Route requires one or more optimized fuel stops
+        # ----------------------------------------------------
+
+        if fuel_stops:
+
+            estimated_price = (
+
+                sum(
+                    station["price"]
+
+                    for station
+                    in fuel_stops
+                )
+
+                /
+
+                len(
+                    fuel_stops
+                )
+            )
 
 
         # ----------------------------------------------------
-        # Average selected fuel price
+        # Route is shorter than the vehicle range.
+        #
+        # No mid-route stop is required, but fuel is still
+        # consumed. Use the supplied dataset's average price
+        # as the estimated fuel price.
         # ----------------------------------------------------
 
-        average_price = (
+        else:
 
-            sum(
-
-                station["price"]
-
-                for station
-                in fuel_stops
+            estimated_price = (
+                fuel_station_service
+                .get_average_fuel_price()
             )
-
-            /
-
-            len(
-                fuel_stops
-            )
-        )
 
 
         return (
             total_gallons
-            * average_price
+            * estimated_price
         )
 
 

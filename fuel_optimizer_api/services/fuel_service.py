@@ -36,7 +36,6 @@ EARTH_RADIUS_MILES = 3958.8
 DEFAULT_STATION_LIMIT = 10
 
 
-
 # ============================================================
 # Fuel Station Service
 # ============================================================
@@ -132,6 +131,39 @@ class FuelStationService:
                 "Fuel dataset is missing required columns: "
                 f"{missing_columns}"
             )
+
+
+        # ----------------------------------------------------
+        # Clean text fields
+        #
+        # Removes trailing/leading whitespace such as:
+        #
+        # "Page                        "
+        #
+        # becoming:
+        #
+        # "Page"
+        # ----------------------------------------------------
+
+        fuel_data["name"] = (
+            fuel_data["name"]
+            .astype(str)
+            .str.strip()
+        )
+
+
+        fuel_data["city"] = (
+            fuel_data["city"]
+            .astype(str)
+            .str.strip()
+        )
+
+
+        fuel_data["state"] = (
+            fuel_data["state"]
+            .astype(str)
+            .str.strip()
+        )
 
 
         # ----------------------------------------------------
@@ -485,6 +517,49 @@ class FuelStationService:
 
         return stations
 
+
+    # ========================================================
+    # Average Fuel Price
+    # ========================================================
+
+    def get_average_fuel_price(
+        self,
+    ) -> float:
+        """
+        Return the average fuel price from the supplied
+        processed fuel-price dataset.
+
+        This is primarily used when a trip is shorter than
+        the vehicle's 500-mile range and therefore no
+        mid-route refueling stop is required.
+
+        The trip still consumes fuel, so we need a reasonable
+        price estimate rather than returning a $0 fuel cost.
+        """
+
+        if self.fuel_data.empty:
+            raise ValueError(
+                "Fuel dataset contains no fuel price information."
+            )
+
+
+        average_price = (
+            self.fuel_data["price"]
+            .mean()
+        )
+
+
+        if pd.isna(
+            average_price
+        ):
+            raise ValueError(
+                "Unable to calculate average fuel price."
+            )
+
+
+        return float(
+            average_price
+        )
 
 
 # ============================================================
